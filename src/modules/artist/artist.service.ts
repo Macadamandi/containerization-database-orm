@@ -1,12 +1,19 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { Artist } from './interfaces/artist.interface';
 import { CreateArtistDto } from './dto/create-artist.dto';
 import { UpdateArtistDto } from './dto/update-artist.dto';
-import { randomUUID } from 'node:crypto';
+import { TrackService } from '../track/track.service';
+import { AlbumService } from '../album/album.service';
 
 @Injectable()
 export class ArtistService {
   private artists: Artist[] = [];
+
+  constructor(
+    private readonly tracksService: TrackService,
+    private readonly albumsService: AlbumService,
+  ) {}
 
   findAll(): Artist[] {
     return this.artists;
@@ -19,11 +26,10 @@ export class ArtistService {
   }
 
   create(dto: CreateArtistDto): Artist {
-    const { name, grammy } = dto;
     const artist: Artist = {
       id: randomUUID(),
-      name,
-      grammy,
+      name: dto.name,
+      grammy: dto.grammy,
     };
     this.artists.push(artist);
     return artist;
@@ -36,11 +42,19 @@ export class ArtistService {
     return artist;
   }
 
-  delete(id: string): boolean {
+  delete(id: string): void {
     const index = this.artists.findIndex((artist) => artist.id === id);
     if (index === -1)
       throw new NotFoundException(`Artist with id ${id} not found`);
+
+    this.tracksService.findAll().forEach((track) => {
+      if (track.artistId === id) track.artistId = null;
+    });
+
+    this.albumsService.findAll().forEach((album) => {
+      if (album.artistId === id) album.artistId = null;
+    });
+
     this.artists.splice(index, 1);
-    return true;
   }
 }

@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { TrackService } from '../track/track.service';
 import { Album } from './interfaces/album.interface';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { UpdateAlbumDto } from './dto/update-album.dto';
@@ -7,6 +8,8 @@ import { randomUUID } from 'node:crypto';
 @Injectable()
 export class AlbumService {
   private albums: Album[] = [];
+
+  constructor(private trackService: TrackService) {}
 
   findAll(): Album[] {
     return this.albums;
@@ -39,8 +42,16 @@ export class AlbumService {
 
   deleteById(id: string): boolean {
     const index = this.albums.findIndex((album) => album.id === id);
-    if (index === -1)
+    if (index === -1) {
       throw new NotFoundException(`Album with id ${id} not found`);
+    }
+
+    this.trackService.findAll().forEach((track) => {
+      if (track.albumId === id) {
+        track.albumId = null;
+      }
+    });
+
     this.albums.splice(index, 1);
     return true;
   }

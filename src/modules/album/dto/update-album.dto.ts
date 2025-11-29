@@ -1,12 +1,13 @@
 import { IsString, IsUUID, IsInt, Min, Max, IsOptional } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class UpdateAlbumDto {
-  @Transform(({ value }) => value.trim())
   @IsString()
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   name: string;
 
   @IsInt()
+  @Type(() => Number)
   @Min(1900)
   @Max(new Date().getFullYear())
   year: number;

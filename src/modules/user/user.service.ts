@@ -48,14 +48,17 @@ export class UserService {
   }
 
   updatePassword(id: string, dto: UpdatePasswordDto): Omit<User, 'password'> {
-    const { oldPassword, newPassword } = dto;
-    const user = this.users.find((user) => user.id === id);
+    const user = this.users.find((u) => u.id === id);
     if (!user) throw new NotFoundException(`User with id ${id} not found`);
-    if (user.password !== oldPassword)
+
+    if (user.password !== dto.oldPassword) {
       throw new ForbiddenException('Old password is incorrect');
-    user.password = newPassword;
+    }
+
+    user.password = dto.newPassword;
     user.version += 1;
     user.updatedAt = Date.now();
+
     const { password: _, ...rest } = user;
     return rest;
   }

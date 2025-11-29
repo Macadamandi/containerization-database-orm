@@ -8,7 +8,6 @@ import {
   Body,
   NotFoundException,
   BadRequestException,
-  ForbiddenException,
   HttpCode,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -42,18 +41,9 @@ export class UserController {
   @Put(':id')
   updatePassword(@Param('id') id: string, @Body() dto: UpdatePasswordDto) {
     if (!isUUID(id)) throw new BadRequestException('Invalid user id');
-    try {
-      return this.userService.updatePassword(id, dto);
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof ForbiddenException
-      ) {
-        throw error;
-      }
-      throw error;
-    }
+    return this.userService.updatePassword(id, dto);
   }
+
   @Delete(':id')
   @HttpCode(204)
   deleteById(@Param('id') id: string) {

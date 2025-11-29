@@ -1,11 +1,12 @@
 import { IsString, IsUUID, IsInt, Min, Max, IsOptional } from 'class-validator';
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 
 export class CreateAlbumDto {
-  @Transform(({ value }) => value.trim())
+  @Transform(({ value }) => value?.trim())
   @IsString()
   name: string;
 
+  @Type(() => Number)
   @IsInt()
   @Min(1900)
   @Max(new Date().getFullYear())

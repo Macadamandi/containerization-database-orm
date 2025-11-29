@@ -38,9 +38,14 @@ export class FavoritesService {
 
   addTrack(id: string): void {
     if (!isUUID(id)) throw new BadRequestException('Invalid track id');
-    const track = this.trackService.findById(id);
-    if (!track) throw new UnprocessableEntityException('Track does not exist');
-    this.favorites.tracks.push(id);
+    try {
+      this.trackService.findById(id);
+    } catch (err) {
+      if (err instanceof NotFoundException)
+        throw new UnprocessableEntityException('Track does not exist');
+      throw err;
+    }
+    if (!this.favorites.tracks.includes(id)) this.favorites.tracks.push(id);
   }
 
   removeTrack(id: string): void {
@@ -52,9 +57,14 @@ export class FavoritesService {
 
   addAlbum(id: string): void {
     if (!isUUID(id)) throw new BadRequestException('Invalid album id');
-    const album = this.albumService.findById(id);
-    if (!album) throw new UnprocessableEntityException('Album does not exist');
-    this.favorites.albums.push(id);
+    try {
+      this.albumService.findById(id);
+    } catch (err) {
+      if (err instanceof NotFoundException)
+        throw new UnprocessableEntityException('Album does not exist');
+      throw err;
+    }
+    if (!this.favorites.albums.includes(id)) this.favorites.albums.push(id);
   }
 
   removeAlbum(id: string): void {
@@ -66,10 +76,14 @@ export class FavoritesService {
 
   addArtist(id: string): void {
     if (!isUUID(id)) throw new BadRequestException('Invalid artist id');
-    const artist = this.artistService.findById(id);
-    if (!artist)
-      throw new UnprocessableEntityException('Artist does not exist');
-    this.favorites.artists.push(id);
+    try {
+      this.artistService.findById(id);
+    } catch (err) {
+      if (err instanceof NotFoundException)
+        throw new UnprocessableEntityException('Artist does not exist');
+      throw err;
+    }
+    if (!this.favorites.artists.includes(id)) this.favorites.artists.push(id);
   }
 
   removeArtist(id: string): void {

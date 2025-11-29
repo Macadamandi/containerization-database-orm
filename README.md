@@ -39,6 +39,8 @@ After application running open new terminal and enter:
 
 To run all tests without authorization
 
+#### DON'T FORGET TO RUN SERVER BEFORE TESTS!
+
 ```
 npm run test
 ```

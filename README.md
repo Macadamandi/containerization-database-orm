@@ -17,6 +17,12 @@ git clone {repository URL}
 npm install
 ```
 
+or
+
+```
+npm ci
+```
+
 ## Running application
 
 ```

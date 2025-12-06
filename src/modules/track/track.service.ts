@@ -1,52 +1,104 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Track } from './interfaces/track.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Track } from './entities/track.entity';
 import { CreateTrackDto } from './dto/create-track.dto';
 import { UpdateTrackDto } from './dto/update-track.dto';
-import { randomUUID } from 'crypto';
+import { Artist } from '../artist/entities/artist.entity';
+import { Album } from '../album/entities/album.entity';
 
 @Injectable()
 export class TrackService {
-  private tracks: Track[] = [];
+  constructor(
+    @InjectRepository(Track)
+    private readonly trackRepository: Repository<Track>,
 
-  findAll(): Track[] {
-    return this.tracks;
+    @InjectRepository(Artist)
+    private readonly artistRepository: Repository<Artist>,
+
+    @InjectRepository(Album)
+    private readonly albumRepository: Repository<Album>,
+  ) {}
+
+  async findAll(): Promise<Track[]> {
+    return this.trackRepository.find({ relations: ['artist', 'album'] });
   }
 
-  findById(id: string): Track {
-    const track = this.tracks.find((track) => track.id === id);
+  async findById(id: string): Promise<Track> {
+    const track = await this.trackRepository.findOne({
+      where: { id },
+      relations: ['artist', 'album'],
+    });
     if (!track) throw new NotFoundException(`Track with id ${id} not found`);
     return track;
   }
 
-  create(dto: CreateTrackDto): Track {
-    const track: Track = {
-      id: randomUUID(),
-      name: dto.name,
-      artistId: dto.artistId ?? null,
-      albumId: dto.albumId ?? null,
-      duration: dto.duration,
-    };
-    this.tracks.push(track);
-    return track;
+  async create(dto: CreateTrackDto): Promise<Track> {
+    const track = new Track();
+    track.name = dto.name;
+    track.duration = dto.duration;
+
+    if (dto.artistId) {
+      const artist = await this.artistRepository.findOne({
+        where: { id: dto.artistId },
+      });
+      if (!artist)
+        throw new NotFoundException(`Artist with id ${dto.artistId} not found`);
+      track.artist = artist;
+    }
+
+    if (dto.albumId) {
+      const album = await this.albumRepository.findOne({
+        where: { id: dto.albumId },
+      });
+      if (!album)
+        throw new NotFoundException(`Album with id ${dto.albumId} not found`);
+      track.album = album;
+    }
+
+    return this.trackRepository.save(track);
   }
 
-  update(id: string, dto: UpdateTrackDto): Track {
-    const track = this.tracks.find((track) => track.id === id);
-    if (!track) throw new NotFoundException(`Track with id ${id} not found`);
+  async update(id: string, dto: UpdateTrackDto): Promise<Track> {
+    const track = await this.findById(id);
 
     if (dto.name !== undefined) track.name = dto.name;
-    if (dto.artistId !== undefined) track.artistId = dto.artistId;
-    if (dto.albumId !== undefined) track.albumId = dto.albumId;
     if (dto.duration !== undefined) track.duration = dto.duration;
 
-    return track;
+    if (dto.artistId !== undefined) {
+      if (dto.artistId === null) {
+        track.artist = null;
+      } else {
+        const artist = await this.artistRepository.findOne({
+          where: { id: dto.artistId },
+        });
+        if (!artist)
+          throw new NotFoundException(
+            `Artist with id ${dto.artistId} not found`,
+          );
+        track.artist = artist;
+      }
+    }
+
+    if (dto.albumId !== undefined) {
+      if (dto.albumId === null) {
+        track.album = null;
+      } else {
+        const album = await this.albumRepository.findOne({
+          where: { id: dto.albumId },
+        });
+        if (!album)
+          throw new NotFoundException(`Album with id ${dto.albumId} not found`);
+        track.album = album;
+      }
+    }
+
+    return this.trackRepository.save(track);
   }
 
-  deleteById(id: string): boolean {
-    const index = this.tracks.findIndex((track) => track.id === id);
-    if (index === -1)
+  async deleteById(id: string): Promise<void> {
+    const result = await this.trackRepository.delete(id);
+    if (result.affected === 0)
       throw new NotFoundException(`Track with id ${id} not found`);
-    this.tracks.splice(index, 1);
-    return true;
   }
 }

@@ -7,8 +7,8 @@ export class FavoritesController {
   constructor(private readonly favoritesService: FavoritesService) {}
 
   @Get()
-  getAll(): FavoritesResponse {
-    return this.favoritesService.getAll();
+  async getAll(): Promise<FavoritesResponse> {
+    return await this.favoritesService.getAll();
   }
 
   @Post('track/:id')

@@ -4,71 +4,88 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { User } from './interfaces/user.interface';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdatePasswordDto } from './dto/update-password.dto';
-import { randomUUID } from 'node:crypto';
+
+type PublicUser = Omit<User, 'password'>;
 
 @Injectable()
 export class UserService {
-  private users: User[] = [];
+  constructor(
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+  ) {}
 
-  findAll(): Omit<User, 'password'>[] {
-    return this.users.map(({ password: _, ...rest }) => rest);
-  }
-
-  findById(id: string): Omit<User, 'password'> {
-    const user = this.users.find((user) => user.id === id);
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
-    const { password: _, ...rest } = user;
-    return rest;
-  }
-
-  create(dto: CreateUserDto): Omit<User, 'password'> {
-    const { login, password } = dto;
-
-    if (this.users.find((user) => user.login === login)) {
-      throw new BadRequestException(
-        `User with login '${login}' already exists`,
-      );
-    }
-
-    const user: User = {
-      id: randomUUID(),
-      login,
-      password,
-      version: 1,
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
+  private mapUser(user: User): PublicUser {
+    return {
+      id: user.id,
+      login: user.login,
+      version: Number(user.version),
+      createdAt: Number(user.createdAt),
+      updatedAt: Number(user.updatedAt),
     };
-
-    this.users.push(user);
-    const { password: _, ...rest } = user;
-    return rest;
   }
 
-  updatePassword(id: string, dto: UpdatePasswordDto): Omit<User, 'password'> {
-    const user = this.users.find((u) => u.id === id);
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+  async findAll(): Promise<PublicUser[]> {
+    const users = await this.userRepository.find();
+    return users.map((u) => this.mapUser(u));
+  }
 
-    if (user.password !== dto.oldPassword) {
+  async findById(id: string): Promise<PublicUser> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    return this.mapUser(user);
+  }
+
+  async create(dto: CreateUserDto): Promise<PublicUser> {
+    const existing = await this.userRepository.findOne({
+      where: { login: dto.login },
+    });
+    if (existing)
+      throw new BadRequestException(
+        `User with login '${dto.login}' already exists`,
+      );
+
+    const now = Date.now();
+    const user = this.userRepository.create({
+      login: dto.login,
+      password: dto.password,
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const saved = await this.userRepository.save(user);
+    return this.mapUser(saved);
+  }
+
+  async updatePassword(
+    id: string,
+    dto: UpdatePasswordDto,
+  ): Promise<PublicUser> {
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException(`User with id ${id} not found`);
+    if (user.password !== dto.oldPassword)
       throw new ForbiddenException('Old password is incorrect');
-    }
 
     user.password = dto.newPassword;
-    user.version += 1;
+    user.version = Number(user.version) + 1;
     user.updatedAt = Date.now();
 
-    const { password: _, ...rest } = user;
-    return rest;
+    const saved = await this.userRepository.save(user);
+    return this.mapUser(saved);
   }
 
-  deleteById(id: string): boolean {
-    const userIndex = this.users.findIndex((user) => user.id === id);
-    if (userIndex === -1) {
+  async deleteById(id: string): Promise<void> {
+    const result = await this.userRepository.delete(id);
+
+    const affected = (result as { affected?: number | string }).affected;
+    const affectedNum = Number(affected ?? 0);
+    if (Number.isNaN(affectedNum) || affectedNum === 0) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    this.users.splice(userIndex, 1);
-    return true;
   }
 }

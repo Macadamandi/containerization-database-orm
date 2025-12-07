@@ -1,13 +1,12 @@
 import { IsString, IsBoolean, MinLength } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class CreateArtistDto {
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
   @IsString()
   @MinLength(2)
   name: string;
 
-  @Type(() => Boolean)
   @IsBoolean()
   grammy: boolean;
 }

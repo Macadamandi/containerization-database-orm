@@ -34,19 +34,28 @@ export class FavoritesService {
   ) {}
 
   async getAll(): Promise<FavoritesResponse> {
-    const artists = await this.artistRepository.findBy({
-      id: In(this.favorites.artists),
-    });
+    const artists =
+      this.favorites.artists.length > 0
+        ? await this.artistRepository.findBy({
+            id: In(this.favorites.artists),
+          })
+        : [];
 
-    const albumsEntities = await this.albumRepository.find({
-      where: { id: In(this.favorites.albums) },
-      relations: ['artist'],
-    });
+    const albumsEntities =
+      this.favorites.albums.length > 0
+        ? await this.albumRepository.find({
+            where: { id: In(this.favorites.albums) },
+            relations: ['artist'],
+          })
+        : [];
 
-    const tracksEntities = await this.trackRepository.find({
-      where: { id: In(this.favorites.tracks) },
-      relations: ['artist', 'album'],
-    });
+    const tracksEntities =
+      this.favorites.tracks.length > 0
+        ? await this.trackRepository.find({
+            where: { id: In(this.favorites.tracks) },
+            relations: ['artist', 'album'],
+          })
+        : [];
 
     const albums = albumsEntities.map((a) => ({
       id: a.id,
@@ -70,35 +79,35 @@ export class FavoritesService {
     if (!isUUID(id)) throw new BadRequestException('Invalid id');
   }
 
-  async addTrack(id: string) {
+  async addTrack(id: string): Promise<void> {
     this.validateId(id);
     const track = await this.trackRepository.findOne({ where: { id } });
     if (!track) throw new UnprocessableEntityException('Track does not exist');
     if (!this.favorites.tracks.includes(id)) this.favorites.tracks.push(id);
   }
 
-  removeTrack(id: string) {
+  async removeTrack(id: string): Promise<void> {
     this.validateId(id);
     const index = this.favorites.tracks.indexOf(id);
     if (index === -1) throw new NotFoundException('Track not in favorites');
     this.favorites.tracks.splice(index, 1);
   }
 
-  async addAlbum(id: string) {
+  async addAlbum(id: string): Promise<void> {
     this.validateId(id);
     const album = await this.albumRepository.findOne({ where: { id } });
     if (!album) throw new UnprocessableEntityException('Album does not exist');
     if (!this.favorites.albums.includes(id)) this.favorites.albums.push(id);
   }
 
-  removeAlbum(id: string) {
+  async removeAlbum(id: string): Promise<void> {
     this.validateId(id);
     const index = this.favorites.albums.indexOf(id);
     if (index === -1) throw new NotFoundException('Album not in favorites');
     this.favorites.albums.splice(index, 1);
   }
 
-  async addArtist(id: string) {
+  async addArtist(id: string): Promise<void> {
     this.validateId(id);
     const artist = await this.artistRepository.findOne({ where: { id } });
     if (!artist)
@@ -106,7 +115,7 @@ export class FavoritesService {
     if (!this.favorites.artists.includes(id)) this.favorites.artists.push(id);
   }
 
-  removeArtist(id: string) {
+  async removeArtist(id: string): Promise<void> {
     this.validateId(id);
     const index = this.favorites.artists.indexOf(id);
     if (index === -1) throw new NotFoundException('Artist not in favorites');

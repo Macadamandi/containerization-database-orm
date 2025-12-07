@@ -19,32 +19,35 @@ export class TrackController {
   constructor(private readonly trackService: TrackService) {}
 
   @Get()
-  findAll() {
-    return this.trackService.findAll();
+  async findAll(): Promise<any> {
+    return await this.trackService.findAll();
   }
 
   @Get(':id')
-  findById(@Param('id') id: string) {
+  async findById(@Param('id') id: string): Promise<any> {
     if (!isUUID(id)) throw new BadRequestException('Invalid track id');
-    return this.trackService.findById(id);
+    return await this.trackService.findById(id);
   }
 
   @Post()
   @HttpCode(201)
-  create(@Body() dto: CreateTrackDto) {
-    return this.trackService.create(dto);
+  async create(@Body() dto: CreateTrackDto): Promise<any> {
+    return await this.trackService.create(dto);
   }
 
   @Put(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateTrackDto) {
+  async update(
+    @Param('id') id: string,
+    @Body() dto: UpdateTrackDto,
+  ): Promise<any> {
     if (!isUUID(id)) throw new BadRequestException('Invalid track id');
-    return this.trackService.update(id, dto);
+    return await this.trackService.update(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  deleteById(@Param('id') id: string) {
+  async deleteById(@Param('id') id: string): Promise<void> {
     if (!isUUID(id)) throw new BadRequestException('Invalid track id');
-    this.trackService.deleteById(id);
+    await this.trackService.deleteById(id);
   }
 }

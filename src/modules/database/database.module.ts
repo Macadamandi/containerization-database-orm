@@ -22,6 +22,7 @@ import { Favorites } from '../favorites/entities/favorites.entity';
         database: config.get<string>('POSTGRES_DB'),
         entities: [User, Artist, Album, Track, Favorites],
         synchronize: true,
+        dropSchema: true,
       }),
     }),
   ],

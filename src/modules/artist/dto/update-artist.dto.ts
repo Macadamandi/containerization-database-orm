@@ -1,5 +1,5 @@
 import { IsString, IsBoolean, IsOptional, MinLength } from 'class-validator';
-import { Transform, Type } from 'class-transformer';
+import { Transform } from 'class-transformer';
 
 export class UpdateArtistDto {
   @IsOptional()
@@ -10,6 +10,5 @@ export class UpdateArtistDto {
 
   @IsOptional()
   @IsBoolean()
-  @Type(() => Boolean)
   grammy?: boolean;
 }

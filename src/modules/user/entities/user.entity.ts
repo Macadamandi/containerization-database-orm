@@ -2,10 +2,15 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  CreateDateColumn,
-  UpdateDateColumn,
-  VersionColumn,
+  ValueTransformer,
 } from 'typeorm';
+
+const BigIntTransformer: ValueTransformer = {
+  to: (value: number | null) =>
+    value !== null && value !== undefined ? value.toString() : value,
+  from: (value: string | number | null) =>
+    value !== null && value !== undefined ? Number(value) : value,
+};
 
 @Entity('users')
 export class User {
@@ -18,12 +23,12 @@ export class User {
   @Column()
   password: string;
 
-  @VersionColumn()
+  @Column({ type: 'int' })
   version: number;
 
-  @CreateDateColumn({ type: 'timestamptz' })
-  createdAt: Date;
+  @Column({ type: 'bigint', transformer: BigIntTransformer })
+  createdAt: number;
 
-  @UpdateDateColumn({ type: 'timestamptz' })
-  updatedAt: Date;
+  @Column({ type: 'bigint', transformer: BigIntTransformer })
+  updatedAt: number;
 }

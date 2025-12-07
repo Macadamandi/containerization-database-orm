@@ -6,7 +6,6 @@ import {
   Delete,
   Param,
   Body,
-  NotFoundException,
   BadRequestException,
   HttpCode,
 } from '@nestjs/common';
@@ -20,34 +19,36 @@ export class UserController {
   constructor(private readonly userService: UserService) {}
 
   @Get()
-  findAll() {
+  async findAll() {
     return this.userService.findAll();
   }
 
   @Get(':id')
-  findById(@Param('id') id: string) {
+  async findById(@Param('id') id: string) {
     if (!isUUID(id)) throw new BadRequestException('Invalid user id');
-    const user = this.userService.findById(id);
-    if (!user) throw new NotFoundException(`User with id ${id} not found`);
-    return user;
+    return this.userService.findById(id);
   }
 
   @Post()
   @HttpCode(201)
-  create(@Body() dto: CreateUserDto) {
+  async create(@Body() dto: CreateUserDto) {
     return this.userService.create(dto);
   }
 
   @Put(':id')
-  updatePassword(@Param('id') id: string, @Body() dto: UpdatePasswordDto) {
+  @HttpCode(200)
+  async updatePassword(
+    @Param('id') id: string,
+    @Body() dto: UpdatePasswordDto,
+  ) {
     if (!isUUID(id)) throw new BadRequestException('Invalid user id');
     return this.userService.updatePassword(id, dto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  deleteById(@Param('id') id: string) {
+  async deleteById(@Param('id') id: string) {
     if (!isUUID(id)) throw new BadRequestException('Invalid user id');
-    this.userService.deleteById(id);
+    await this.userService.deleteById(id);
   }
 }

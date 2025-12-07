@@ -1,83 +1,61 @@
 # Home Library Service
 
-## Prerequisites
+## Set up the project
 
-- Git - [Download & Install Git](https://git-scm.com/downloads).
-- Node.js - [Download & Install Node.js](https://nodejs.org/en/download/) and the npm package manager.
-
-## Downloading
-
-```
-git clone {repository URL}
+```bash
+git clone https://github.com/Macadamandi/containerization-database-orm.git
+cd containerization-database-orm
+git checkout develop
 ```
 
-## Installing NPM modules
+## Installing dependencies
 
-```
+```bash
 npm install
 ```
 
 or
 
-```
+```bash
 npm ci
 ```
 
-## Running application with Docker
+## ENV variables
 
+Copy .env.example and change to .env
+
+## Running with Docker image
+
+Start the app and PostgreSQL together using Docker Compose:
+
+```bash
+docker-compose up
 ```
 
-docker-compose build
-docker-compose up -d
+**Details:**
 
-```
+- Docker Compose reads the `docker-compose.yml` file in the project root.
+- The `app` service uses the image `macadamandi/containerization-database-orm:latest`.
+  - If this image is **not available locally**, Docker will automatically pull it from Docker Hub.
+- The `postgres` service uses the official `postgres:16-alpine` image, which will also be pulled automatically if not found locally.
+- After startup:
+  - The app is available at [http://localhost:4000](http://localhost:4000)
+  - OpenAPI docs are available at [http://localhost:4000/doc/](http://localhost:4000/doc/)
 
-After starting the app on port (4000 as default) you can open
-in your browser OpenAPI documentation by typing http://localhost:4000/doc/.
-For more information about OpenAPI/Swagger please visit https://swagger.io/.
+## Running tests
 
-## Testing
+**⚠️ Make sure the server is running before running tests!**
 
-After application running open new terminal and enter:
+Run all tests:
 
-To run all tests without authorization
-
-#### DON'T FORGET TO RUN SERVER BEFORE TESTS!
-
-```
+```bash
 npm run test
 ```
 
-To run only one of all test suites
+## Linting
 
-```
-npm run test -- <path to suite>
-```
+Lint the project:
 
-To run all test with authorization
-
-```
-npm run test:auth
-```
-
-To run only specific test suite with authorization
-
-```
-npm run test:auth -- <path to suite>
-```
-
-### Auto-fix and format
-
-```
+```bash
 npm run lint
 ```
-
-```
-npm run format
-```
-
-### Debugging in VSCode
-
-Press <kbd>F5</kbd> to debug.
-
-For more information, visit: https://code.visualstudio.com/docs/editor/debugging

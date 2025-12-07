@@ -23,10 +23,13 @@ or
 npm ci
 ```
 
-## Running application
+## Running application with Docker
 
 ```
-npm start
+
+docker-compose build
+docker-compose up -d
+
 ```
 
 After starting the app on port (4000 as default) you can open

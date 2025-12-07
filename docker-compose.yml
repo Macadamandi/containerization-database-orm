@@ -15,7 +15,7 @@ services:
       - pgdata:/var/lib/postgresql/data
 
   app:
-    build: .
+    image: macadamandi/containerization-database-orm:latest
     container_name: home_library_app
     restart: always
     environment:
